@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 {
     [HelpURL("https://drive.google.com/open?id=1YUwzA1mGvzWRpajDV-XF0iUd4RhW--bhMpqo-gmj9B8")]
-    internal class ImageSequence : ScriptableObject
+    internal partial class ImageSequence : ScriptableObject
     {
         public List<string> inputFrameGUIDs = new List<string>();
         public List<ProcessorInfo> processorInfos = new List<ProcessorInfo>();
@@ -29,6 +29,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
             public TextureWrapMode wrapMode;
             public FilterMode filterMode;
             public DataContents dataContents;
+            public SpriteNameFormat spriteNameFormat;
         }
 
        
@@ -96,6 +97,12 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
             NormalMap = 1,
             NormalMapFromGrayscale = 2,
             Sprite = 3
+        }
+
+        public enum SpriteNameFormat
+        {
+	        FramePrefix = 0,
+	        InputNames = 10
         }
 
         private void OnEnable()

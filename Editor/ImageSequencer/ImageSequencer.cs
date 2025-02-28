@@ -74,9 +74,9 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         void OnEnable()
         {
             if (EditorGUIUtility.isProSkin)
-                titleContent = styles.proTitle;
+                titleContent = ProTitle;
             else
-                titleContent = styles.title;
+                titleContent = Title;
 
             m_ProcessorDataProvider = null;
 

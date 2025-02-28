@@ -9,7 +9,6 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 
 
         private bool m_PreviewInput = false;
-        private bool m_PreviewOutput = false;
         private bool m_RequireConstantRepaint = false;
 
         public override bool RequiresConstantRepaint()
@@ -113,6 +112,12 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
                     EditorGUI.BeginDisabledGroup(true);
                     EditorGUILayout.TextField("Export Path", fileName);
                     EditorGUI.EndDisabledGroup();
+                    
+                    GUILayout.Space(10);
+                    if (GUILayout.Button(VFXToolboxGUIUtility.Get("Export"), GUILayout.Height(40)))
+                    {
+	                    ((ImageSequence)target).ExportToFile(true);
+                    }
                 }
                 else
                 {

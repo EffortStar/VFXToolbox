@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditorInternal;
 using System.Collections.Generic;
+using System.IO;
 
 namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 {
@@ -187,6 +188,5 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         } 
 
         #endregion
-
     }
 }

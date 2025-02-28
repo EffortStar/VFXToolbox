@@ -7,6 +7,13 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         static Styles s_Styles = null;
         public static Styles styles { get { if (s_Styles == null) s_Styles = new Styles(); return s_Styles; } }
 
+        // Don't put content that's loaded in OnEnable in Styles, as EditorStyles may throw an NRE inside OnEnable.
+        static GUIContent s_ProTitle = null;
+        static GUIContent s_Title = null;
+
+		static GUIContent ProTitle => s_ProTitle ??= new GUIContent("Image Sequencer", AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.unity.vfx-toolbox/Editor/ImageSequencer/EditorResources/d_ImageSequencer-Icon.png"));
+		static GUIContent Title => s_Title ??= new GUIContent("Image Sequencer", AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.unity.vfx-toolbox/Editor/ImageSequencer/EditorResources/ImageSequencer-Icon.png"));
+        
         public class Styles
         {
             public const int ToolbarHeight = 21;
@@ -14,9 +21,6 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
             public GUIStyle scrollView;
 
             public GUIStyle playbackControlWindow;
-
-            public GUIContent proTitle;
-            public GUIContent title;
 
             public readonly GUIContent iconPlay = EditorGUIUtility.IconContent("Animation.Play", "Play the sequence"); 
             public readonly GUIContent iconBack = EditorGUIUtility.IconContent("Animation.PrevKey", "Go back one Frame");
@@ -57,9 +61,6 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 
             public Styles()
             {
-                proTitle = new GUIContent("Image Sequencer", AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.unity.vfx-toolbox/Editor/ImageSequencer/EditorResources/d_ImageSequencer-Icon.png"));
-                title = new GUIContent("Image Sequencer", AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.unity.vfx-toolbox/Editor/ImageSequencer/EditorResources/ImageSequencer-Icon.png"));
-
                 scrollView = new GUIStyle();
                 scrollView.padding = new RectOffset(8, 8, 0, 0);
 

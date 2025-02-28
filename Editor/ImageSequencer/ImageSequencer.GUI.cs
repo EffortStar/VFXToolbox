@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditorInternal;
 using System.Collections.Generic;
+using System.IO;
 
 namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 {
@@ -277,7 +278,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
                 Rect exportButtonRect = new Rect(position.width - 100, Styles.ToolbarHeight + 12, 74, 24);
                 if (GUI.Button(exportButtonRect, VFXToolboxGUIUtility.GetTextAndIcon("Update", "SaveActive"), VFXToolboxStyles.TabButtonSingle))
                 {
-                    UpdateExportedAssets();
+                    m_CurrentAsset.UpdateExportedAssets(m_ProcessingNodeStack);
                 }
             }
         }
@@ -571,6 +572,8 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
                         ProcessingNode n = m_ProcessingNodeStack.nodes[m_ProcessingNodeStack.nodes.Count - 1];
                         if (((float)n.OutputWidth % n.NumU) != 0 || ((float)n.OutputHeight % n.NumV) != 0)
                             EditorGUILayout.HelpBox("Warning : texture size is not a multiplier of rows ("+n.NumU+") and columns ("+n.NumV+") count, this will lead to incorrect rendering of the sprite animation", MessageType.Warning);
+                        
+                        m_CurrentAsset.exportSettings.spriteNameFormat = (ImageSequence.SpriteNameFormat)EditorGUILayout.EnumPopup(VFXToolboxGUIUtility.Get("Sprite naming|Frame prefix is Frame_X, input names retains the names from input textures."), m_CurrentAsset.exportSettings.spriteNameFormat);
                     }
 
                     switch(m_CurrentAsset.exportSettings.dataContents)
@@ -602,7 +605,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
                 {
                     string fileName = "";
 
-                    fileName = ExportToFile(false);
+                    fileName = m_CurrentAsset.ExportToFile(m_ProcessingNodeStack, false);
 
                     if (fileName != "")
                     {
@@ -619,7 +622,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
                 {
                     if(GUILayout.Button("Update Exported Assets", GUILayout.Height(24)))
                     {
-                        UpdateExportedAssets();
+	                    m_CurrentAsset.UpdateExportedAssets(m_ProcessingNodeStack);
                     }
                 }
 
@@ -658,6 +661,50 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         public void UpdateViewport()
         {
             m_NeedRedraw = true;
+        }
+        
+        private static GUIContent[] GetExportModeFriendlyNames()
+        {
+	        return new GUIContent[] { VFXToolboxGUIUtility.Get("Targa"), VFXToolboxGUIUtility.Get("OpenEXR (HDR)"), VFXToolboxGUIUtility.Get("PNG") };
+        }
+        
+        private void PingCurrentAsset()
+        {
+	        EditorGUIUtility.PingObject(this);
+        }
+
+        public static void PingOutputTexture(string fileName)
+        {
+
+	        if (fileName == "")
+		        return; 
+
+	        string dir = Path.GetDirectoryName(fileName);
+	        string file = Path.GetFileNameWithoutExtension(fileName);
+
+	        if(!fileName.StartsWith("Assets/"))
+		        return;
+
+	        if(fileName.Contains("#"))
+	        {
+		        if(Directory.Exists(dir))
+		        {
+			        string[] guids = AssetDatabase.FindAssets(file.Replace('#', '*'), new string[] { dir });
+			        fileName = AssetDatabase.GUIDToAssetPath(guids[0]);
+		        }
+	        }
+
+	        bool fileFound = (fileName != "") && (File.Exists(fileName));
+
+	        if(fileFound)
+	        {
+		        Texture texture = AssetDatabase.LoadAssetAtPath<Texture>(fileName);
+		        if (texture != null) EditorGUIUtility.PingObject(texture);
+	        }
+	        else
+	        {
+		        Debug.LogWarning("Could not ping output texture, either the file was moved or removed, you probably need to export your sequence again");
+	        }
         }
 
         private class CanvasConfigPopupWindowContent : PopupWindowContent

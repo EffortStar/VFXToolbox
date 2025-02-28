@@ -80,7 +80,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         public Shader shader { get; private set; }
         public Material material { get; private set; }
 
-        public bool isCurrentlyPreviewed => m_ProcessingNodeStack.imageSequencer.previewCanvas.sequence.processingNode == this;
+        public bool isCurrentlyPreviewed => m_ProcessingNodeStack.imageSequencer != null && m_ProcessingNodeStack.imageSequencer.previewCanvas.sequence.processingNode == this;
         public int previewCurrentFrame => m_ProcessingNodeStack.imageSequencer.previewCanvas.currentFrameIndex;
         public int previewSequenceLength => m_ProcessingNodeStack.imageSequencer.previewCanvas.numFrames;
 

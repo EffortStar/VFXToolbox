@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 {
@@ -43,7 +44,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         private ProcessingFrameSequence m_InputSequence;
         private ImageSequencer m_ImageSequencer;
 
-        public ProcessingNodeStack(ProcessingFrameSequence inputSequence, ImageSequencer imageSequencer)
+        public ProcessingNodeStack(ProcessingFrameSequence inputSequence, [AllowNull] ImageSequencer imageSequencer)
         {
             m_InputSequence = inputSequence;
             m_ProcessingNodes = new List<ProcessingNode>();
