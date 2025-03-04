@@ -1,15 +1,69 @@
-﻿using System;
+﻿#if UNITY_2022_2_OR_NEWER && SPRITE_PACKAGE
+#define USES_SPRITE_DATA_PROVIDER
+using UnityEditor.U2D.Sprites;
+#endif
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
 using VFXToolbox.MiniTGA;
-#if UNITY_2022_2_OR_NEWER && SPRITE_PACKAGE
-using UnityEditor.U2D.Sprites;
-#endif
+using Object = UnityEngine.Object;
 
 namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 {
+	public static class ImageSequenceExport
+	{
+		public static string CreateSpriteSheet(List<Sprite> sprites, string outputFilePathWithoutExtension, ushort spriteSizeX, ushort spriteSizeY)
+		{
+			var sequence = ScriptableObject.CreateInstance<ImageSequence>();
+
+			// Construct sprite sheet settings.
+			sequence.exportSettings = new ImageSequence.ExportSettings
+			{
+				fileName = outputFilePathWithoutExtension.Replace('\\', '/') + ".png",
+				frameCount = 1,
+				outputShape = ImageSequence.OutputMode.Texture2D,
+				exportMode = ImageSequence.ExportMode.PNG,
+				exportAlpha = true,
+				exportSeparateAlpha = false,
+				sRGB = true,
+				highDynamicRange = false,
+				compress = true,
+				generateMipMaps = false,
+				wrapMode = TextureWrapMode.Clamp,
+				filterMode = FilterMode.Bilinear,
+				dataContents = ImageSequence.DataContents.Sprite,
+				spriteNameFormat = ImageSequence.SpriteNameFormat.InputNames
+			};
+			var resizeProcessor = ScriptableObject.CreateInstance<ResizeProcessor>();
+			resizeProcessor.Width = spriteSizeX;
+			resizeProcessor.Height = spriteSizeY;
+			AddProcessor(resizeProcessor);
+			AddProcessor(ScriptableObject.CreateInstance<AssembleAtlasProcessor>());
+			sequence.inputFrameGUIDs = sprites.Select(s => AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(s)).ToString()).ToList();
+
+			// Export & cleanup.
+			string result = sequence.ExportToFile(true);
+			foreach (ProcessorInfo processorInfo in sequence.processorInfos)
+			{
+				Object.DestroyImmediate(processorInfo.Settings);
+				Object.DestroyImmediate(processorInfo);
+			}
+			
+			Object.DestroyImmediate(sequence);
+			return result;
+
+			void AddProcessor(ProcessorBase processor)
+			{
+				var processorInfo = ScriptableObject.CreateInstance<ProcessorInfo>();
+				processorInfo.Enabled = true;
+				processorInfo.Settings = processor;
+				sequence.processorInfos.Add(processorInfo);
+			}
+		}
+	}
+	
 	internal partial class ImageSequence
 	{
 		private string GetNumberedFileName(string pattern, int number, int maxFrames)
@@ -299,7 +353,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
             catch(System.Exception e)
             {
                 VFXToolboxGUIUtility.ClearProgressBar();
-                Debug.LogError(e.Message);
+                Debug.LogException(e);
             }
 
             VFXToolboxGUIUtility.ClearProgressBar();
@@ -338,11 +392,15 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         {
 			int numU = stack.outputSequence.numU;
 			int numV = stack.outputSequence.numV;
-			
+			// TODO the input shouldn't be used here,  instead it should require a processing node
+			// that stores the original sprites and requires the user set up a matching exporter that reads from it.
+			// This same issue occurs in GetSpriteName.
+			int length = stack.inputSequence.length;
+
 			float width = (float)frame.texture.width / numU;
 			float height = (float)frame.texture.height / numV;
 	        
-#if UNITY_2022_2_OR_NEWER && SPRITE_PACKAGE
+#if USES_SPRITE_DATA_PROVIDER
 	        var factory = new SpriteDataProviderFactories();
 	        factory.Init();
 	        var dataProvider = factory.GetSpriteEditorDataProviderFromObject(importer);
@@ -350,41 +408,43 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 
 	        Dictionary<string, SpriteRect> oldRectsByName = dataProvider.GetSpriteRects().ToDictionary(sr => sr.name, sr => sr);
 
-	        var rects = new SpriteRect[numU * numV];
+	        var result = new SpriteRect[length];
+#else
+			SpriteMetaData[] result = new SpriteMetaData[length];
+#endif
 
-	        for (int i = 0; i < numU; i++)
 	        for (int j = 0; j < numV; j++)
+	        for (int i = 0; i < numU; i++)
 	        {
 		        int index = i + j * numU;
-		        var spriteName = GetSpriteName(index, stack);
+		        if (index >= length)
+			        break;
+		        string spriteName = GetSpriteName(index, stack);
+		        var rect = new Rect(i * width, j * height, width, height);
+#if USES_SPRITE_DATA_PROVIDER
 		        GUID guid = oldRectsByName.TryGetValue(spriteName, out var oldRect) ? oldRect.spriteID : new GUID();
-		        
+
 		        SpriteRect data = new()
 		        {
 			        name = spriteName,
-			        rect = new Rect(i * width, (numV - j - 1) * height, width, height),
+			        rect = rect,
 			        spriteID = guid
 		        };
-		        rects[index] = data;
+#else
+                var data = new SpriteMetaData
+                {
+	                name = spriteName,
+	                rect = rect
+                };
+#endif
+                result[index] = data;
 	        }
 
 	        
-	        dataProvider.SetSpriteRects(rects);
+#if USES_SPRITE_DATA_PROVIDER
+	        dataProvider.SetSpriteRects(result);
 	        dataProvider.Apply();
 #else
-		    SpriteMetaData[] result = new SpriteMetaData[numU * numV];
-
-            for(int i = 0; i < numU; i++)
-            for(int j = 0; j < numV; j++)
-            {
-                SpriteMetaData data = new SpriteMetaData();
-				int index = i + j * numU;
-		        var spriteName = GetSpriteName(index, stack);
-                data.name = spriteName;
-                data.rect = new Rect(i * width, (numV - j - 1) * height, width, height);
-                result[index] = data;
-            }
-
 	        importer.spritesheet = result;
 #endif
         }

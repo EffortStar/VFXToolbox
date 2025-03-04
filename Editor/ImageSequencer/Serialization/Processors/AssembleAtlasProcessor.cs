@@ -11,8 +11,8 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer {
       get {
         // Find the next power of 2 texture that contains every element in the input
         for (var i = 2; i < 64; i++) {
-          int x = i / 2;
-          int y = i - x;
+          int y = i / 2;
+          int x = i - y;
           int xx = 1 << x;
           int yy = 1 << y;
           int sizeX = xx / inputSequenceWidth;
@@ -106,7 +106,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer {
       // Blit Every Image inside output
       for (var i = 0; i < inputSequenceLength; i++) {
         int u = i % FlipbookNumU;
-        int v = (FlipbookNumV - 1) - (int)Mathf.Floor((float)i / FlipbookNumU);
+        int v = (int)Mathf.Floor((float)i / FlipbookNumU);
 
         Vector2 size = new(1.0f / FlipbookNumU, 1.0f / FlipbookNumV);
         int idx = Mathf.Clamp(i, 0, length - 1);
