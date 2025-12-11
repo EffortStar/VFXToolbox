@@ -7,6 +7,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
     internal partial class ImageSequence : ScriptableObject
     {
         public List<string> inputFrameGUIDs = new List<string>();
+        public List<Object> inputFrameAssets = new List<Object>();
         public List<ProcessorInfo> processorInfos = new List<ProcessorInfo>();
         public ExportSettings exportSettings = defaultExportSettings;
         public EditSettings editSettings = defaultEditSettings;

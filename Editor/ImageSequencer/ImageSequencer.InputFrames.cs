@@ -125,6 +125,8 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
                 var builder = new System.Text.StringBuilder();
                 foreach (string s in m_CurrentAsset.inputFrameGUIDs)
                     builder.Append(s);
+                foreach (Object o in m_CurrentAsset.inputFrameAssets)
+	                builder.Append(o.GetInstanceID());
                 return builder.ToString().GetHashCode();
             }
             else

@@ -41,7 +41,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
 			resizeProcessor.Height = spriteSizeY;
 			AddProcessor(resizeProcessor);
 			AddProcessor(ScriptableObject.CreateInstance<AssembleAtlasProcessor>());
-			sequence.inputFrameGUIDs = sprites.Select(s => AssetDatabase.GUIDFromAssetPath(AssetDatabase.GetAssetPath(s)).ToString()).ToList();
+			sequence.inputFrameAssets = sprites.OfType<Object>().ToList();
 
 			// Export & cleanup.
 			string result = sequence.ExportToFile(true);

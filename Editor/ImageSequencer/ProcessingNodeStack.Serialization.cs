@@ -22,6 +22,7 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         public void RemoveAllInputFrames(ImageSequence asset)
         {
             asset.inputFrameGUIDs.Clear();
+            asset.inputFrameAssets.Clear();
             m_InputSequence.frames.Clear();
 
             EditorUtility.SetDirty(asset);
@@ -32,6 +33,10 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
             asset.inputFrameGUIDs.Sort((guidA,guidB) => {
                 return string.Compare(AssetDatabase.GUIDToAssetPath(guidA), AssetDatabase.GUIDToAssetPath(guidB));
             });
+            
+            asset.inputFrameAssets.Sort((a,b) => {
+	            return string.Compare(a.name, b.name);
+            });
 
             EditorUtility.SetDirty(asset);
         }
@@ -39,16 +44,17 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
         public void ReverseAllInputFrames(ImageSequence asset)
         {
             asset.inputFrameGUIDs.Reverse();
+            asset.inputFrameAssets.Reverse();
             EditorUtility.SetDirty(asset);
         }
 
         public void LoadFramesFromAsset(ImageSequence asset)
         {
             inputSequence.frames.Clear();
+            int i = 1;
             if (asset.inputFrameGUIDs != null && asset.inputFrameGUIDs.Count > 0)
             {
                 int count = asset.inputFrameGUIDs.Count;
-                int i = 1;
                 foreach (string guid in asset.inputFrameGUIDs)
                 {
                     VFXToolboxGUIUtility.DisplayProgressBar("Image Sequencer", "Loading Textures (" + i + "/" + count + ")", (float)i/count, 0.1f);
@@ -65,6 +71,34 @@ namespace UnityEditor.Experimental.VFX.Toolbox.ImageSequencer
                     i++;
                 }
                 VFXToolboxGUIUtility.ClearProgressBar();
+            }
+            
+            if (asset.inputFrameAssets != null && asset.inputFrameAssets.Count > 0)
+            {
+	            int count = asset.inputFrameAssets.Count;
+	            foreach (UnityEngine.Object o in asset.inputFrameAssets)
+	            {
+		            VFXToolboxGUIUtility.DisplayProgressBar("Image Sequencer", "Loading Textures (" + i + "/" + count + ")", (float)i/count, 0.1f);
+
+		            Texture2D t;
+		            if (o == null)
+		            {
+			            t = null;
+		            }
+		            else
+		            {
+			            t = o switch
+			            {
+				            Texture2D tex => tex,
+				            Sprite s => s.texture,
+				            _ => null
+			            };
+		            }
+
+		            inputSequence.frames.Add(t != null ? new ProcessingFrame(t) : ProcessingFrame.Missing);
+		            i++;
+	            }
+	            VFXToolboxGUIUtility.ClearProgressBar();
             }
         }
 
